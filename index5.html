@@ -19,7 +19,7 @@
         }
 
     body {
-      background-color: DimGray;
+      background-color: lightgray;
     }
 
     </style>
@@ -31,13 +31,17 @@
                   right: 30,
                   bottom: 60,
                   left: 60};
+
       var width = 500 - margin.left - margin.right;
       var height = 350 - margin.top - margin.bottom;
-      var x = d3.scaleBand().rangeRound([0, width]).padding(.1);
+      var x0 = d3.scaleBand().rangeRound([0, width]).paddingInner(0);
+      var x1 = d3.scaleBand().padding(.2);
       var y = d3.scaleLinear().range([height, 0]);
 
-      var xAxis = d3.axisBottom(x);
+      var xAxis = d3.axisBottom(x0);
       var yAxis = d3.axisLeft(y);
+
+      var color = d3.scaleOrdinal(d3.schemeCategory10);
 
       var svg = d3.select("body")
           .append("svg")
@@ -72,20 +76,21 @@
           });
 
     console.log({figdata});
-      figdata.forEach(function(group){
-        console.log(group.Color);
-      })
 
     var tallies = figdata.map(function(a) {return a.Count;});
     var names = figdata.map(function(a) {return a.Species;});
+    var uniqueColors = figdata.map(function(a) {return a.Color;});
 
-        x.domain(d3.set(names).values());
+        x0.domain(d3.set(names).values());
+        x1.domain(uniqueColors).rangeRound([0, x0.bandwidth()]);
         y.domain([0, d3.max(tallies)]);
+
+        console.log(x0.bandwidth());
 
         svg.append("g")
             .attr("class", "axis axis--x")
             .attr("transform", "translate(0," + height + ")")
-            .call(d3.axisBottom(x));
+            .call(d3.axisBottom(x0));
 
         svg.append("g")
             .attr("class", "axis axis--y")
@@ -97,24 +102,23 @@
             .attr("text-anchor", "end")
             .text("SepalLength");
 
-            svg.append("g")
-              .selectAll("g")
-              .data(figdata)
-              .enter().append("g")
-              .attr("fill", function(d) {
-                 if(d.Color === "white"){return "#F2EFEA"}
-                  if(d.Color === "yellow"){return "#FFE877"}
-                  if(d.Color === "pink"){return "#F9CACA"}
-                  if(d.Color === "purple"){return "#B6B3DB"}
-                  if(d.Color === "magenta"){return "#A84FBC"}
-                })
-              .selectAll("rect")
-              .data(function(d) { return d; })
-              .enter().append("rect")
-              .attr("x", function(d) { return x(d.Species); })
-              .attr("y", function(d) { return y(d.Count); })
-              .attr("height", function(d) { return y(d.Count); })
-              .attr("width", x.bandwidth());
+            svg.selectAll("bar")
+                .data(figdata)
+                .enter().append("rect")
+                .attr("transform", function(d) {return "translate(" + x0(d.Species) + ",0)";})
+                .attr("x", function(d) { return x1(d.Color); })
+                .attr("y", function(d) { return y(d.Count); })
+                .attr("width", x1.bandwidth())
+                .attr("height", function(d) {
+                   return height - y(d.Count);
+                 })
+                .style("fill", function(d) {
+                     if(d.Color === "white"){return "#F2EFEA"}
+                     if(d.Color === "yellow"){return "#FFE877"}
+                     if(d.Color === "pink"){return "#F9CACA"}
+                     if(d.Color === "purple"){return "#B6B3DB"}
+                     if(d.Color === "magenta"){return "#A84FBC"}
+                   });
             });
 
       </script>

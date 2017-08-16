@@ -63,7 +63,7 @@
           // })
 
           mydata.sort(function(a,b) { return a.value.n - b.value.n; });
-          console.log(mydata);
+          console.log({mydata});
 
           x.domain(mydata.map(function(d) { return d.key; }));
           y.domain(d3.extent(mydata, function(d) { return d.value.n;})).nice();
