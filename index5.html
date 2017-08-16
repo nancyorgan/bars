@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script
+        src="https://d3js.org/d3.v4.min.js"
+        type="text/javascript"
+        language="javascript">
+    </script>
+    <style>
+    path
+    {
+        fill: none;
+        stroke: #000;
+    }
+
+    .label {
+          font-size: 10pt;
+        }
+
+    body {
+      background-color: DimGray;
+    }
+
+    </style>
+      </head>
+      <body>
+        <script>
+      var margin = {
+                  top: 30,
+                  right: 30,
+                  bottom: 60,
+                  left: 60};
+      var width = 500 - margin.left - margin.right;
+      var height = 350 - margin.top - margin.bottom;
+      var x = d3.scaleBand().rangeRound([0, width]).padding(.1);
+      var y = d3.scaleLinear().range([height, 0]);
+
+      var xAxis = d3.axisBottom(x);
+      var yAxis = d3.axisLeft(y);
+
+      var svg = d3.select("body")
+          .append("svg")
+          .attr("width", width + margin.left + margin.right)
+          .attr("height", height + margin.top + margin.bottom)
+          .append("g")
+          .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+      d3.csv("iris.txt", function(error, data) {
+      var colors = new Set();
+
+      var nest = d3.nest()
+        .key(function(d) { return d.Species; })
+        .key(function(d) {
+            colors.add(d.Color);
+            return d.Color;
+          })
+        .rollup(function(v) { return v.length; })
+        .entries(data);
+
+      console.log({nest});
+
+      var figdata = []
+          nest.forEach(function(group) {
+            group.values.forEach(function(flower) {
+              figdata.push({
+                Species: group.key,
+                Color: flower.key,
+                Count: flower.value
+              });
+            });
+          });
+
+    console.log({figdata});
+      figdata.forEach(function(group){
+        console.log(group.Color);
+      })
+
+    var tallies = figdata.map(function(a) {return a.Count;});
+    var names = figdata.map(function(a) {return a.Species;});
+
+        x.domain(d3.set(names).values());
+        y.domain([0, d3.max(tallies)]);
+
+        svg.append("g")
+            .attr("class", "axis axis--x")
+            .attr("transform", "translate(0," + height + ")")
+            .call(d3.axisBottom(x));
+
+        svg.append("g")
+            .attr("class", "axis axis--y")
+            .call(d3.axisLeft(y).ticks(10))
+          .append("text")
+            .attr("transform", "rotate(-90)")
+            .attr("y", 6)
+            .attr("dy", "0.71em")
+            .attr("text-anchor", "end")
+            .text("SepalLength");
+
+            svg.append("g")
+              .selectAll("g")
+              .data(figdata)
+              .enter().append("g")
+              .attr("fill", function(d) {
+                 if(d.Color === "white"){return "#F2EFEA"}
+                  if(d.Color === "yellow"){return "#FFE877"}
+                  if(d.Color === "pink"){return "#F9CACA"}
+                  if(d.Color === "purple"){return "#B6B3DB"}
+                  if(d.Color === "magenta"){return "#A84FBC"}
+                })
+              .selectAll("rect")
+              .data(function(d) { return d; })
+              .enter().append("rect")
+              .attr("x", function(d) { return x(d.Species); })
+              .attr("y", function(d) { return y(d.Count); })
+              .attr("height", function(d) { return y(d.Count); })
+              .attr("width", x.bandwidth());
+            });
+
+      </script>
+   </body>
+ </html>

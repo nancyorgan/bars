@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script
+        src="https://d3js.org/d3.v4.min.js"
+        type="text/javascript"
+        language="javascript">
+    </script>
+    <style>
+    path
+    {
+        fill: none;
+        stroke: #000;
+    }
+
+    .label {
+          font-size: 10pt;
+        }
+
+    body {
+      background-color: DimGray;
+    }
+
+    </style>
+      </head>
+      <body>
+        <script>
+      var margin = {
+                  top: 30,
+                  right: 30,
+                  bottom: 60,
+                  left: 60};
+      var width = 500 - margin.left - margin.right;
+      var height = 350 - margin.top - margin.bottom;
+      var x = d3.scaleBand().rangeRound([0, width]).padding(.1);
+      var y = d3.scaleLinear().range([height, 0]);
+
+      var xAxis = d3.axisBottom(x);
+      var yAxis = d3.axisLeft(y);
+
+      //var color = d3.scaleOrdinal()
+        //.range(["#ffe877", "#f2efea", "#f9caca", "#b6b3db", "#a84fbc"])
+
+      var svg = d3.select("body")
+          .append("svg")
+          .attr("width", width + margin.left + margin.right)
+          .attr("height", height + margin.top + margin.bottom)
+          .append("g")
+          .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+      d3.csv("iris.txt", function(error, data) {
+      var colors = new Set();
+
+      var nest = d3.nest()
+        .key(function(d) { return d.Species; })
+        .key(function(d) {
+            colors.add(d.Color);
+            return d.Color;
+          })
+        .rollup(function(v) { return v.length; })
+        .object(data);
+        /*.map(function(group) {
+          return {
+            Species:  group.key,
+            Count: group.value,
+          }
+        });*/
+      console.log({nest});
+
+        // This puts the species name on the same level as the
+        // color counts
+      var entries = Object.entries(nest).map(function (keyValArr) {
+        var Species = keyValArr[0];
+        var Colors = keyValArr[1];
+        Colors["Species"] = Species;
+        return Colors;
+      });
+
+      console.log({entries});
+
+      var stack = d3.stack()
+          .keys(Array.from(colors.values()))
+          .value(function(cut, color) {
+            var count = cut[color];
+            if (typeof(count) === "undefined") {
+              count = 0;
+            }
+            return count;
+          })(entries); // function invocation
+
+        console.log({stack});
+
+//d3.keys(nest[d3.keys(temp1.nest)[1]])
+
+
+      //var data = []
+      /*d3.keys(nest).forEach(function(group) {
+        group.values.forEach(function(flower) {
+          data.push({
+            Species: group.key,
+            Color: flower.key,
+            Count: flower.value
+          });
+        });
+      });
+
+      console.log({data});*/
+
+        x.domain(Object.keys(nest));
+        y.domain([0, d3.max(stack[stack.length - 1],
+          function(e){ return e[1];})]).nice();
+
+        svg.append("g")
+            .attr("class", "axis axis--x")
+            .attr("transform", "translate(0," + height + ")")
+            .call(d3.axisBottom(x));
+
+        svg.append("g")
+            .attr("class", "axis axis--y")
+            .call(d3.axisLeft(y).ticks(10))
+          .append("text")
+            .attr("transform", "rotate(-90)")
+            .attr("y", 6)
+            .attr("dy", "0.71em")
+            .attr("text-anchor", "end")
+            .text("SepalLength");
+
+            svg.append("g")
+              .selectAll("g")
+              .data(stack)
+              .enter().append("g")
+                .attr("fill", function(d) {
+                  if(d.key === "white"){return "#F2EFEA"}
+                  if(d.key === "yellow"){return "#FFE877"}
+                  if(d.key === "pink"){return "#F9CACA"}
+                  if(d.key === "purple"){return "#B6B3DB"}
+                  if(d.key === "magenta"){return "#A84FBC"}
+                })
+              .selectAll("rect")
+              .data(function(d) { return d; })
+              .enter().append("rect")
+              .attr("x", function(d) { return x(d.data.Species); })
+              .attr("y", function(d) { return y(d[1]); })
+              .attr("height", function(d) { return y(d[0]) - y(d[1]); })
+              .attr("width", x.bandwidth());
+            });
+
+      </script>
+   </body>
+ </html>
