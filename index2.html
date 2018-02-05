@@ -19,6 +19,8 @@
         }
 
     </style>
+    <!-- label><input type="checkbox"> Sort values</label -->
+
       </head>
       <body>
         <script>
@@ -38,7 +40,7 @@
         var xAxis = d3.axisBottom(x);
         var yAxis = d3.axisLeft(y);
 
-        var color = d3.scaleOrdinal(d3.schemeCategory10);
+        //var color = d3.scaleOrdinal(d3.schemeCategory10);
 
         var svg = d3.select("body")
 		      .append("svg")
@@ -47,26 +49,15 @@
           .append("g")
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-		    d3.csv("diamonds.csv", function(error, data) {
-          // use d3.nest and key like group_by, where nest is "group" and key is "by"
-          var mydata = d3.nest()
-            .key(function(d){
-              return d.cut;
-            })
-            .rollup(function(group){ // rollup by group, which in this case is cut
-              return {n: group.length};
-            })
-            .entries(data);
+		    d3.csv("diamonds_aggregated.csv", function(error, data) {
 
-          // data.forEach(function(d) {
-          //   d.n = +d.n;
-          // })
+          data.forEach(function(d) {
+            d.n = +d.n;
+          })
+          console.log(data);
 
-          mydata.sort(function(a,b) { return a.value.n - b.value.n; });
-          console.log({mydata});
-
-          x.domain(mydata.map(function(d) { return d.key; }));
-          y.domain(d3.extent(mydata, function(d) { return d.value.n;})).nice();
+          x.domain(data.map(function(d) { return d.cut; }));
+          y.domain(d3.extent(data, function(d) { return d.n;})).nice();
 
           svg.append("g")
               .attr("class", "axis")
@@ -103,15 +94,21 @@
                 .text("Number of Diamonds by Cut");
 
             svg.selectAll("bar")
-                .data(mydata)
+                .data(data)
                 .enter().append("rect")
-                .attr("x", function(d) { return x(d.key); })
-                .attr("y", function(d) { return y(d.value.n); })
+                .attr("x", function(d) { return x(d.cut); })
+                .attr("y", function(d) { return y(d.n); })
                 .attr("width", x.bandwidth())
                 .attr("height", function(d) {
-                   return height - y(d.value.n);
+                   return height - y(d.n);
                  })
-                .style("fill", function(d) { return color(d.key)});
+                .style("fill", function(d) {
+                 if(d.cut === "Fair"){return "#21157C"}
+                 if(d.cut === "Good"){return "#544b91"}
+                 if(d.cut === "Very Good"){return "#B2D4F4"}
+                 if(d.cut === "Premium"){return "#FFF69B"}
+                 if(d.cut === "Ideal"){return "#9791c6"}
+               });
 
               });
 	   </script>

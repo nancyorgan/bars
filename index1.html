@@ -19,7 +19,7 @@
         }
 
     </style>
-    <label><input type="checkbox"> Sort values</label>
+    <!-- label><input type="checkbox"> Sort values</label -->
 
       </head>
       <body>
@@ -49,23 +49,14 @@
           .append("g")
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-		    d3.csv("diamonds.csv", function(error, data) {
-
-          var nest = d3.nest()
-            .key(function(d){return d.cut;})
-            .rollup(function(v){ return {
-              n: v.length,
-            };})
-            .entries(data);
-
-            console.log(nest);
+		    d3.csv("diamonds_aggregated.csv", function(error, data) {
 
           data.forEach(function(d) {
             d.n = +d.n;
           })
 
           x.domain(data.map(function(d) { return d.cut; }));
-          y.domain(d3.extent(nest, function(d) { return d.value.n;})).nice();
+          y.domain(d3.extent(data, function(d) { return d.n;})).nice();
 
           svg.append("g")
               .attr("class", "axis")
@@ -101,19 +92,16 @@
                 .style("font-family", "Arial")
                 .text("Number of Diamonds by Cut");
 
-                svg.selectAll(".bar")
-                sort(function(a, b) { return x0(a.key) - x0(b.key); });
-
             svg.selectAll("bar")
-                .data(nest)
+                .data(data)
                 .enter().append("rect")
-                .attr("x", function(d) { return x(d.key); })
-                .attr("y", function(d) { return y(d.value.n); })
+                .attr("x", function(d) { return x(d.cut); })
+                .attr("y", function(d) { return y(d.n); })
                 .attr("width", x.bandwidth())
                 .attr("height", function(d) {
-                   return height - y(d.value.n);
+                   return height - y(d.n);
                  })
-               .style("fill", function(d) { return color(d.key)});
+               .style("fill", function(d) { return color(d.cut)});
 
               });
 	   </script>
