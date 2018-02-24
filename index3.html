@@ -39,7 +39,8 @@
         var yAxis = d3.axisLeft(y);
 
         var color = d3.scaleOrdinal()
-          .range(["#21157C","#544b91", "#9791c6", "#FFF69B", "#B2D4F4", "#75B7F4","#eac7e1"]);
+          .range(["#21157C","#544b91", "#9791c6", "#FFF69B",
+                 "#B2D4F4", "#75B7F4","#eac7e1"]);
 
         var svg = d3.select("body")
 		      .append("svg")
@@ -87,22 +88,26 @@
               })(entries); // function invocation
 
           x.domain(Object.keys(nest).reverse());
-       // x.domain(nest.map(function(d) { return d.key; }));
-          //console.log(Object.keys({nest}));
-          //console.log(Object.keys(nest).reverse());
-          console.log({stack});
 
+          console.log({stack});
 
           y.domain([0, d3.max(stack[stack.length - 1],
             function(e) { return e[1];})]).nice();
 
           color.domain(Array.from(colors.values()));
 
-          svg.append("g")
-            .selectAll("g")
+          svg.selectAll("g")
             .data(stack)
             .enter().append("g")
-              .attr("fill", function(d) { return color(d.key); })
+            .style("fill", function(d) {
+             if(d.key === "D"){return "#21157C"}
+             if(d.key === "E"){return "#544b91"}
+             if(d.key === "F"){return "#B2D4F4"}
+             if(d.key === "G"){return "#FFF69B"}
+             if(d.key === "H"){return "#9791c6"}
+             if(d.key === "I"){return "#75B7F4"}
+             if(d.key === "J"){return "#eac7e1"}
+           })
             .selectAll("rect")
             .data(function(d) { return d; })
             .enter().append("rect")

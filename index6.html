@@ -8,90 +8,107 @@
         language="javascript">
     </script>
     <style>
-    .arc path
+    path
     {
         fill: none;
         stroke: #000;
     }
-
+    .label {
+          font-size: 10pt;
+        }
     </style>
       </head>
       <body>
         <script>
+        var margin = {
+            top: 30,
+            right: 30,
+            bottom: 60,
+            left: 60};
 
-
-        var width = 500;
-        var height = 350;
-        var radius = Math.min(width, height) / 2;
+        var width = 500 - margin.left - margin.right;
+        var height = 350 - margin.top - margin.bottom;
+        var x0 = d3.scaleBand().rangeRound([0, width]).paddingInner(0);
+        var x1 = d3.scaleBand().padding(.2);
+        var y = d3.scaleLinear().range([height, 0]);
+        var xAxis = d3.axisBottom(x0);
+        var yAxis = d3.axisLeft(y);
 
         var svg = d3.select("body")
 		      .append("svg")
-            .attr("width", width)
-            .attr("height", height)
-            .attr("radius", radius)
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
           .append("g")
-            .attr("transform", "translate(" +  width/2 + "," + height/2 + ")");
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-            var pie = d3.pie()
-                .sort(null)
-                .value(function(d) { return d.Count; });
+		    d3.csv("diamonds_aggregated_stacked.csv", function(error, data) {
+          data.forEach(function(d) {
+            d.chunk = +d.chunk;
+          })
+          console.log(data);
 
-            var path = d3.arc()
-                .outerRadius(radius - 10)
-                .innerRadius(radius - 120);
+          var names = data.map(function(a) {return a.cut;});
+          console.log({names})
+          var uniqueColors = data.map(function(a) {return a.color;});
+          console.log({uniqueColors})
 
-            var label = d3.arc()
-                .outerRadius(radius - 40)
-                .innerRadius(radius - 40);
+          x0.domain(d3.set(names).values());
+          x1.domain(uniqueColors).rangeRound([0, x0.bandwidth()]);
+          y.domain(d3.extent(data, function(d) { return d.chunk;})).nice();
 
-		    d3.csv("diamonds.csv", function(error, data) {
 
-          var nest = d3.nest()
-            .key(function(d){return d.color;})
-            .rollup(function(v){ return v.length; })
-            .entries(data);
+          svg.selectAll("bar")
+              .data(data)
+              .enter().append("rect")
+              .attr("transform", function(d) {return "translate(" + x0(d.cut) + ",0)";})
+              .attr("x", function(d) { return x1(d.color); })
+              .attr("y", function(d) { return y(d.chunk); })
+              .attr("width", x1.bandwidth())
+              .attr("height", function(d) {return height - y(d.chunk);})
+            .style("fill", function(d) {
+             if(d.color === "D"){return "#21157C"}
+             if(d.color === "E"){return "#544b91"}
+             if(d.color === "F"){return "#B2D4F4"}
+             if(d.color === "G"){return "#FFF69B"}
+             if(d.color === "H"){return "#9791c6"}
+             if(d.color === "I"){return "#75B7F4"}
+             if(d.color === "J"){return "#eac7e1"}
+           });
 
-        console.log({nest});
+          svg.append("g")
+            .attr("class", "axis")
+            .attr("transform", "translate(0," + height + ")")
+            .call(xAxis)
+            .append("text")
+              .attr("class", "label")
+              .attr("x", width/2)
+              .attr("y", 30)
+              .style("text-anchor", "middle")
+              .style("fill", "black")
+              .text("Cut");
 
-            var figdata = []
-                nest.forEach(function(group) {
-                    figdata.push({
-                      Color: group.key,
-                      Count: group.value
-                  });
-                });
+          svg.append("g")
+            .attr("class", "axis")
+            .call(yAxis)
+            .append("text")
+              .attr("class", "label")
+              .attr("transform", "rotate(-90)")
+              .attr("y", -margin.left/1.3)
+              .attr("x", -height/2)
+              .style("text-anchor", "middle")
+              .style("fill", "black")
+              .text("Count");
 
-          console.log({figdata});
-          console.log(pie(figdata));
-
-            var arc = svg.selectAll(".arc")
-                .data(pie(figdata))
-                .enter().append("g")
-                  .attr("class", "arc");
-
-            arc.append("path")
-              .attr("d", path)
-              .style("fill", function(d) {
-                   if(d.data.Color === "D"){return "#21157C"}
-                   if(d.data.Color === "E"){return "#544b91"}
-                   if(d.data.Color === "F"){return "#9791c6"}
-                   if(d.data.Color === "G"){return "#FFF69B"}
-                   if(d.data.Color === "H"){return "#B2D4F4"}
-                   if(d.data.Color === "I"){return "#75B7F4"}
-                   if(d.data.Color === "J"){return "#eac7e1"}
-                 });
-
-            arc.append("text")
-                .attr("transform", function(d) {
-                   return "translate(" + label.centroid(d) + ")";
-                 })
-                .attr("dy", "0.35em")
-                .style("fill", "black")
-                .text(function(d) {
-                  return d.data.Color + ": " + d.data.Count; });
-
-          });
-
-      </script>
+            svg.append("g")
+              .attr("class", "title")
+              .append("text")
+              .attr("x", width/2 - margin.left)
+              .attr("y", -5)
+              .attr("text-anchor", "middle")
+              .style("font-size", "16px")
+              .style("font-family", "Arial")
+              .text("Number of Diamonds by Cut");
+              });
+	   </script>
   </body>
 </html>

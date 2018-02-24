@@ -13,11 +13,9 @@
         fill: none;
         stroke: #000;
     }
-
     .label {
           font-size: 10pt;
         }
-
     </style>
       </head>
       <body>
@@ -33,11 +31,8 @@
       var x0 = d3.scaleBand().rangeRound([0, width]).paddingInner(0);
       var x1 = d3.scaleBand().padding(.2);
       var y = d3.scaleLinear().range([height, 0]);
-
       var xAxis = d3.axisBottom(x0);
       var yAxis = d3.axisLeft(y);
-
-      var color = d3.scaleOrdinal(d3.schemeCategory10);
 
       var svg = d3.select("body")
           .append("svg")
@@ -76,45 +71,53 @@
     var tallies = figdata.map(function(a) {return a.Count;});
     var names = figdata.map(function(a) {return a.Species;});
     var uniqueColors = figdata.map(function(a) {return a.Color;});
+    console.log({uniqueColors})
 
         x0.domain(d3.set(names).values());
         x1.domain(uniqueColors).rangeRound([0, x0.bandwidth()]);
         y.domain([0, d3.max(tallies)]);
 
         console.log(x0.bandwidth());
+        svg.selectAll("bar")
+            .data(figdata)
+            .enter().append("rect")
+            .attr("transform", function(d) {return "translate(" + x0(d.Species) + ",0)";})
+            .attr("x", function(d) { return x1(d.Color); })
+            .attr("y", function(d) { return y(d.Count); })
+            .attr("width", x1.bandwidth())
+            .attr("height", function(d) {return height - y(d.Count);})
+            .style("fill", function(d) {
+                 if(d.Color === "white"){return "#F2EFEA"}
+                 if(d.Color === "yellow"){return "#FFE877"}
+                 if(d.Color === "pink"){return "#F9CACA"}
+                 if(d.Color === "purple"){return "#B6B3DB"}
+                 if(d.Color === "magenta"){return "#A84FBC"}
+               });
 
         svg.append("g")
-            .attr("class", "axis axis--x")
-            .attr("transform", "translate(0," + height + ")")
-            .call(d3.axisBottom(x0));
-
-        svg.append("g")
-            .attr("class", "axis axis--y")
-            .call(d3.axisLeft(y).ticks(10))
+          .attr("class", "axis")
+          .attr("transform", "translate(0," + height + ")")
+          .call(xAxis)
           .append("text")
-            .attr("transform", "rotate(-90)")
-            .attr("y", 6)
-            .attr("dy", "0.71em")
-            .attr("text-anchor", "end")
-            .text("SepalLength");
+            .attr("class", "label")
+            .attr("x", width/2)
+            .attr("y", 30)
+            .style("text-anchor", "middle")
+            .style("fill", "black")
+            .text("Cut");
 
-            svg.selectAll("bar")
-                .data(figdata)
-                .enter().append("rect")
-                .attr("transform", function(d) {return "translate(" + x0(d.Species) + ",0)";})
-                .attr("x", function(d) { return x1(d.Color); })
-                .attr("y", function(d) { return y(d.Count); })
-                .attr("width", x1.bandwidth())
-                .attr("height", function(d) {
-                   return height - y(d.Count);
-                 })
-                .style("fill", function(d) {
-                     if(d.Color === "white"){return "#F2EFEA"}
-                     if(d.Color === "yellow"){return "#FFE877"}
-                     if(d.Color === "pink"){return "#F9CACA"}
-                     if(d.Color === "purple"){return "#B6B3DB"}
-                     if(d.Color === "magenta"){return "#A84FBC"}
-                   });
+            svg.append("g")
+              .attr("class", "axis")
+              .call(yAxis)
+              .append("text")
+                .attr("class", "label")
+                .attr("transform", "rotate(-90)")
+                .attr("y", -margin.left/1.3)
+                .attr("x", -height/2)
+                .style("text-anchor", "middle")
+                .style("fill", "black")
+                .text("Count");
+
             });
 
       </script>
